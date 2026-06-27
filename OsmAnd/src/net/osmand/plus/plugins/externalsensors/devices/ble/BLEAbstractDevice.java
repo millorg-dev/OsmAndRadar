@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import net.osmand.PlatformUtil;
+import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice;
 import net.osmand.plus.plugins.externalsensors.GattAttributes;
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
 import net.osmand.plus.plugins.externalsensors.devices.DeviceConnectionResult;
@@ -87,6 +88,8 @@ public abstract class BLEAbstractDevice extends AbstractDevice<BLEAbstractSensor
 			device = new BLERunningSCDDevice(bluetoothAdapter, address);
 		} else if (BLEBPICPDevice.getServiceUUID().equals(uuid)) {
 			device = new BLEBPICPDevice(bluetoothAdapter, address);
+		} else if (BLEGardiaDevice.getServiceUUID().equals(uuid)) {
+			device = new BLEGardiaDevice(bluetoothAdapter, address);
 		}
 		if (device != null) {
 			device.deviceName = name;

@@ -34,6 +34,7 @@ import net.osmand.plus.R;
 import net.osmand.plus.Version;
 import net.osmand.plus.activities.ActivityResultListener;
 import net.osmand.plus.activities.MapActivity;
+import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DevicePreferencesListener;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DeviceSettings;
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
@@ -82,7 +83,8 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 			BLEBikeSCDDevice.getServiceUUID(),
 			BLEHeartRateDevice.getServiceUUID(),
 			BLERunningSCDDevice.getServiceUUID(),
-			BLETemperatureDevice.getServiceUUID());
+			BLETemperatureDevice.getServiceUUID(),
+			BLEGardiaDevice.getServiceUUID());
 
 	private OsmandApplication app;
 	protected DevicesSettingsCollection devicesSettingsCollection;
@@ -199,6 +201,8 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 					bluetoothAdapter != null ? new BLEBikeSCDDevice(bluetoothAdapter, deviceId) : null;
 			case BLE_RUNNING_SCDS ->
 					bluetoothAdapter != null ? new BLERunningSCDDevice(bluetoothAdapter, deviceId) : null;
+			case BLE_RADAR_GARDIA ->
+					bluetoothAdapter != null ? new BLEGardiaDevice(bluetoothAdapter, deviceId) : null;
 			default -> null;
 		};
 	}

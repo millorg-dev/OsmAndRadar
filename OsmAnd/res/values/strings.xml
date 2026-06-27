@@ -11,6 +11,12 @@
 	Strings for OsmAnd core
 	Thx - Hardy
 -->
+	<!-- Bike Radar Plugin -->
+	<string name="bike_radar_device_name">Rear Radar</string>
+	<string name="bike_radar_plugin_name">Bike Radar</string>
+	<string name="bike_radar_plugin_description">Rear radar display for cycling. Supports Bryton Gardia and Garmin Varia via BLE.</string>
+	<string name="bike_radar_high_speed_threshold">High-speed alert threshold (km/h)</string>
+
 	<!--  AisTrackerSettings  -->
 	<string name="ais_own_object">Settings for display of own AIS object</string>
 	<string name="ais_own_object_description">If the own vessel has an AIS transmitter then the signal will be received together with other AIS vessel\'s signals. Special handling of the own AIS signal is defined here.</string>
