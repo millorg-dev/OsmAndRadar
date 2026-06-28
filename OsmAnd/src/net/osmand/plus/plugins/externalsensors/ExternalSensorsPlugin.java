@@ -471,7 +471,7 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 		if (device.getDeviceType() == DeviceType.BLE_RADAR_GARDIA) {
 			BikeRadarPlugin bikeRadarPlugin = PluginsHelper.getPlugin(BikeRadarPlugin.class);
 			if (bikeRadarPlugin != null) {
-				PluginsHelper.enablePluginIfNeeded(getMapActivity(), app, bikeRadarPlugin, true);
+				PluginsHelper.enablePluginIfNeeded(null, app, bikeRadarPlugin, true);
 			}
 		}
 	}
