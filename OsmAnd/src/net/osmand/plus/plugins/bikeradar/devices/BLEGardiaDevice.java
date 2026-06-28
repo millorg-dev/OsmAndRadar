@@ -1,10 +1,14 @@
 package net.osmand.plus.plugins.bikeradar.devices;
 
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothProfile;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import net.osmand.plus.plugins.bikeradar.RadarConfig;
+import net.osmand.plus.plugins.bikeradar.RadarLiveDebugStatus;
 import net.osmand.plus.plugins.externalsensors.DeviceType;
 import net.osmand.plus.plugins.externalsensors.devices.ble.BLEAbstractDevice;
 
@@ -40,5 +44,27 @@ public class BLEGardiaDevice extends BLEAbstractDevice {
     @NonNull
     public static UUID getServiceUUID() {
         return RadarConfig.UUID_SERVICE_RADAR;
+    }
+
+    @Override
+    protected void onGattConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        if (newState == BluetoothProfile.STATE_CONNECTED) {
+            RadarLiveDebugStatus.onDeviceConnected();
+        } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            RadarLiveDebugStatus.onDeviceDisconnected();
+        }
+        super.onGattConnectionStateChange(gatt, status, newState);
+    }
+
+    @Override
+    public boolean connect(@NonNull android.content.Context context, @Nullable android.app.Activity activity) {
+        RadarLiveDebugStatus.onDeviceConnecting();
+        return super.connect(context, activity);
+    }
+
+    @Override
+    public boolean disconnect() {
+        RadarLiveDebugStatus.onDeviceDisconnected();
+        return super.disconnect();
     }
 }

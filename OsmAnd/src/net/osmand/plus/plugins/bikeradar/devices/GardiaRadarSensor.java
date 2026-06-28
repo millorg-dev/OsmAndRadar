@@ -10,6 +10,7 @@ import net.osmand.plus.plugins.bikeradar.BikeRadarPlugin;
 import net.osmand.plus.plugins.bikeradar.RadarAlertCalculator;
 import net.osmand.plus.plugins.bikeradar.RadarConfig;
 import net.osmand.plus.plugins.bikeradar.RadarDebugTrace;
+import net.osmand.plus.plugins.bikeradar.RadarLiveDebugStatus;
 import net.osmand.plus.plugins.bikeradar.RadarState;
 import net.osmand.plus.plugins.bikeradar.RadarVehicle;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.AbstractSensor;
@@ -143,6 +144,7 @@ public class GardiaRadarSensor extends BLEAbstractSensor {
         lastState = newState;
         lastTimeDifferentValue = System.currentTimeMillis();
         RadarDebugTrace.onPacket(bytes, vehicles, newState);
+        RadarLiveDebugStatus.onPacket(bytes.length, newState);
 
         // Notify the plugin via static listener (avoids circular dependency)
         BikeRadarPlugin.RadarStateListener listener = BikeRadarPlugin.getRadarStateListener();

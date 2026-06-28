@@ -13,6 +13,7 @@ import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.plugins.OsmandPlugin;
+import net.osmand.plus.plugins.bikeradar.ui.RadarDebugOverlayView;
 import net.osmand.plus.plugins.bikeradar.ui.RadarStripView;
 import net.osmand.plus.settings.backend.preferences.CommonPreference;
 
@@ -45,12 +46,18 @@ public class BikeRadarPlugin extends OsmandPlugin {
     /** Debug-only on-device packet trace for ride diagnostics without laptop. */
     public final CommonPreference<Boolean> DEBUG_TRACE_ENABLED;
 
+    /** Show live radar diagnostics directly on the map strip. */
+    public final CommonPreference<Boolean> DEBUG_OVERLAY_ENABLED;
+
     // -----------------------------------------------------------------------
     // UI
     // -----------------------------------------------------------------------
 
     @Nullable
     private RadarStripView radarStripView;
+
+    @Nullable
+    private RadarDebugOverlayView radarDebugOverlayView;
 
     // -----------------------------------------------------------------------
     // Radar state listener (static so GardiaRadarSensor can call it without
@@ -81,6 +88,9 @@ public class BikeRadarPlugin extends OsmandPlugin {
         DEBUG_TRACE_ENABLED = settings.registerBooleanPreference(
             "bike_radar_debug_trace_enabled",
             BuildConfig.DEBUG).makeGlobal();
+        DEBUG_OVERLAY_ENABLED = settings.registerBooleanPreference(
+            "bike_radar_debug_overlay_enabled",
+            BuildConfig.DEBUG).makeGlobal();
     }
 
     // -----------------------------------------------------------------------
@@ -109,15 +119,19 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     @Override
     public void mapActivityCreate(@NonNull MapActivity activity) {
+        RadarLiveDebugStatus.onPluginActive(true);
         RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         addRadarStripView(activity);
+        addRadarDebugOverlay(activity);
         registerRadarListener();
     }
 
     @Override
     public void mapActivityResume(@NonNull MapActivity activity) {
+        RadarLiveDebugStatus.onPluginActive(true);
         RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         addRadarStripView(activity);
+        addRadarDebugOverlay(activity);
         registerRadarListener();
     }
 
@@ -128,8 +142,10 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     @Override
     public void mapActivityDestroy(@NonNull MapActivity activity) {
+        RadarLiveDebugStatus.onPluginActive(false);
         radarStateListener = null;
         radarStripView = null;
+        radarDebugOverlayView = null;
     }
 
     // -----------------------------------------------------------------------
@@ -160,10 +176,32 @@ public class BikeRadarPlugin extends OsmandPlugin {
         stripHost.addView(radarStripView, params);
     }
 
+    private void addRadarDebugOverlay(@NonNull MapActivity activity) {
+        if (radarDebugOverlayView != null || !DEBUG_OVERLAY_ENABLED.get()) {
+            return;
+        }
+        View stripHostView = activity.findViewById(R.id.radar_strip_host);
+        if (!(stripHostView instanceof FrameLayout)) {
+            return;
+        }
+        FrameLayout stripHost = (FrameLayout) stripHostView;
+        float density = activity.getResources().getDisplayMetrics().density;
+        int marginPx = Math.round(12f * density);
+
+        radarDebugOverlayView = new RadarDebugOverlayView(activity);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.START | Gravity.TOP;
+        params.setMargins(marginPx, marginPx, marginPx, marginPx);
+        stripHost.addView(radarDebugOverlayView, params);
+    }
+
     private void registerRadarListener() {
         RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         radarStateListener = state -> {
             RadarDebugTrace.onState(state);
+            RadarLiveDebugStatus.onState(state);
             RadarStripView view = radarStripView;
             if (view != null) {
                 view.updateState(state);

@@ -1,6 +1,5 @@
 package net.osmand.plus.plugins.bikeradar.ui;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,9 +46,9 @@ public class RadarStripView extends View {
     static final int COLOR_HIGH_SPEED  = 0xFFF44336; // Red 500
     static final int COLOR_BACKGROUND  = 0x88000000; // semi-transparent black overlay
 
-    private static final int MIN_ANIMATION_DURATION_MS = 120;
-    private static final int MAX_ANIMATION_DURATION_MS = 360;
-    private static final float MIN_MOVE_TO_ANIMATE_PX = 1.5f;
+    private static final long FRAME_INTERVAL_MS = 16L;
+    private static final float POSITION_FOLLOW_FACTOR = 0.28f;
+    private static final float SNAP_DISTANCE_PX = 0.6f;
 
     // -----------------------------------------------------------------------
     // Paint objects
@@ -66,9 +64,46 @@ public class RadarStripView extends View {
 
     /** Animated Y positions per vehicle ID (pixels from top of view). */
     private final Map<Integer, Float> vehicleYPositions = new HashMap<>();
-    private final Map<Integer, ValueAnimator> vehicleAnimators = new HashMap<>();
+    private final Map<Integer, Float> vehicleTargetYPositions = new HashMap<>();
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private boolean frameAnimationRunning;
+    private final Runnable frameAnimationRunnable = new Runnable() {
+        @Override
+        public void run() {
+            boolean hasMotion = false;
+
+            for (Map.Entry<Integer, Float> entry : vehicleYPositions.entrySet()) {
+                int vehicleId = entry.getKey();
+                float currentY = entry.getValue();
+                Float targetYObj = vehicleTargetYPositions.get(vehicleId);
+                if (targetYObj == null) {
+                    continue;
+                }
+
+                float targetY = targetYObj;
+                float delta = targetY - currentY;
+                if (Math.abs(delta) <= SNAP_DISTANCE_PX) {
+                    if (currentY != targetY) {
+                        entry.setValue(targetY);
+                    }
+                    continue;
+                }
+
+                float nextY = currentY + delta * POSITION_FOLLOW_FACTOR;
+                entry.setValue(nextY);
+                hasMotion = true;
+            }
+
+            if (hasMotion) {
+                postInvalidateOnAnimation();
+                mainHandler.postDelayed(this, FRAME_INTERVAL_MS);
+            } else {
+                frameAnimationRunning = false;
+                postInvalidateOnAnimation();
+            }
+        }
+    };
 
     // -----------------------------------------------------------------------
     // Constructors
@@ -119,81 +154,44 @@ public class RadarStripView extends View {
         float viewHeight = getHeight();
         if (viewHeight == 0) {
             // View not yet measured; just store state, onDraw will be called after layout
-            invalidate();
+            postInvalidateOnAnimation();
             return;
         }
 
-        // Cancel animators for vehicles that disappeared
-        for (Map.Entry<Integer, ValueAnimator> entry : vehicleAnimators.entrySet()) {
-            boolean stillPresent = false;
-            for (RadarVehicle v : state.getVehicles()) {
-                if (v.getId() == entry.getKey()) {
-                    stillPresent = true;
-                    break;
-                }
-            }
-            if (!stillPresent) {
-                entry.getValue().cancel();
-            }
-        }
-
-        // Animate each current vehicle to its target Y position
+        // Update target Y position for each current vehicle.
         for (RadarVehicle vehicle : state.getVehicles()) {
             float targetY = calculateVehicleY(vehicle.getDistanceMeters(),
                     RadarConfig.MAX_RADAR_DISTANCE_METERS, viewHeight);
-            animateVehicleToY(vehicle.getId(), targetY);
+            int vehicleId = vehicle.getId();
+            vehicleTargetYPositions.put(vehicleId, targetY);
+            if (!vehicleYPositions.containsKey(vehicleId)) {
+                vehicleYPositions.put(vehicleId, targetY);
+            }
         }
 
-        // Remove positions for vehicles that are gone
+        // Remove positions/targets for vehicles that are gone.
         vehicleYPositions.entrySet().removeIf(e -> {
             for (RadarVehicle v : state.getVehicles()) {
                 if (v.getId() == e.getKey()) return false;
             }
             return true;
         });
-        vehicleAnimators.entrySet().removeIf(e -> {
+        vehicleTargetYPositions.entrySet().removeIf(e -> {
             for (RadarVehicle v : state.getVehicles()) {
                 if (v.getId() == e.getKey()) return false;
             }
             return true;
         });
 
-        invalidate();
+        ensureFrameAnimationRunning();
+        postInvalidateOnAnimation();
     }
 
-    private void animateVehicleToY(int vehicleId, float targetY) {
-        float startY = vehicleYPositions.getOrDefault(vehicleId, (float) getHeight());
-
-        ValueAnimator existing = vehicleAnimators.get(vehicleId);
-        if (existing != null) {
-            Object current = existing.getAnimatedValue();
-            if (current instanceof Float) {
-                startY = (Float) current;
-            }
-            existing.cancel();
+    private void ensureFrameAnimationRunning() {
+        if (!frameAnimationRunning) {
+            frameAnimationRunning = true;
+            mainHandler.post(frameAnimationRunnable);
         }
-
-        float delta = Math.abs(targetY - startY);
-        if (delta < MIN_MOVE_TO_ANIMATE_PX) {
-            vehicleYPositions.put(vehicleId, targetY);
-            invalidate();
-            return;
-        }
-
-        float viewHeight = Math.max(1f, getHeight());
-        float normalizedDelta = Math.min(delta / viewHeight, 1f);
-        int durationMs = (int) (MIN_ANIMATION_DURATION_MS
-                + (MAX_ANIMATION_DURATION_MS - MIN_ANIMATION_DURATION_MS) * normalizedDelta);
-
-        ValueAnimator animator = ValueAnimator.ofFloat(startY, targetY);
-        animator.setDuration(durationMs);
-        animator.setInterpolator(new LinearInterpolator());
-        animator.addUpdateListener(animation -> {
-            vehicleYPositions.put(vehicleId, (Float) animation.getAnimatedValue());
-            invalidate();
-        });
-        vehicleAnimators.put(vehicleId, animator);
-        animator.start();
     }
 
     // -----------------------------------------------------------------------
@@ -224,6 +222,14 @@ public class RadarStripView extends View {
             float top = yPos - iconHeight / 2f;
             drawVehicleArrow(canvas, iconX, top, iconWidth, iconHeight);
         }
+
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mainHandler.removeCallbacks(frameAnimationRunnable);
+        frameAnimationRunning = false;
     }
 
     /**
