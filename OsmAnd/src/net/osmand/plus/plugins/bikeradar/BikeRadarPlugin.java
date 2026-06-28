@@ -71,7 +71,7 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     public BikeRadarPlugin(@NonNull OsmandApplication app) {
         super(app);
-        HIGH_SPEED_THRESHOLD_KMH = registerFloatPreference(
+        HIGH_SPEED_THRESHOLD_KMH = settings.registerFloatPreference(
                 "bike_radar_high_speed_threshold_kmh",
                 RadarConfig.DEFAULT_HIGH_SPEED_THRESHOLD_KMH).makeProfile();
     }
@@ -161,11 +161,4 @@ public class BikeRadarPlugin extends OsmandPlugin {
         };
     }
 
-    // -----------------------------------------------------------------------
-    // Preference helper
-    // -----------------------------------------------------------------------
-
-    private CommonPreference<Float> registerFloatPreference(@NonNull String key, float defaultValue) {
-        return settings.registerFloatPreference(key, defaultValue);
-    }
 }

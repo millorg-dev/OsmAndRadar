@@ -144,6 +144,6 @@ public class GardiaRadarSensor extends BLEAbstractSensor {
 
         // Also fire through the standard device listener chain so the External Sensors
         // plugin knows data arrived (keeps connection health checks happy)
-        device.notifySensorData(this, new RadarSensorData(newState));
+        device.fireSensorDataEvent(this, new RadarSensorData(newState));
     }
 }
