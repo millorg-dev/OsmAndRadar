@@ -66,7 +66,7 @@ public class PairNewDeviceBottomSheet extends MenuBottomSheetDialogFragment {
 						AbstractDevice<?> device = plugin != null ? plugin.createFakeRadarDevice() : null;
 						if (device != null) {
 							callMapActivity(mapActivity ->
-									ExternalDeviceDetailsFragment.showInstance(mapActivity.getSupportFragmentManager(), device));
+									ExternalDeviceDetailsFragment.Companion.showInstance(mapActivity.getSupportFragmentManager(), device));
 						}
 					})
 					.create();
