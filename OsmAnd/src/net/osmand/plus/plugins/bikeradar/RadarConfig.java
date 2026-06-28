@@ -14,6 +14,21 @@ import java.util.UUID;
  */
 public final class RadarConfig {
 
+    public enum PacketParserMode {
+        /**
+         * Generic parser where byte[0] is the vehicle count and each entry is 5 bytes.
+         * This matches the initial reverse-engineered assumption.
+         */
+        LEGACY_COUNT_FIRST,
+
+        /**
+         * Bryton Gardia safe mode.
+         * Observed "idle/all-clear" notifications start with frame marker 0x30.
+         * Until the full frame layout is verified, these frames are treated as all-clear.
+         */
+        GARDIA_SAFE
+    }
+
     private RadarConfig() {}
 
     // -----------------------------------------------------------------------
@@ -80,4 +95,17 @@ public final class RadarConfig {
      * 1 unit = 0.01 m/s → multiply by 3.6 for km/h.
      */
     public static final float SPEED_UNIT_MS = 0.01f;
+
+    // -----------------------------------------------------------------------
+    // Parser mode and observed Gardia frame markers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Active parser mode.
+     * Default uses a conservative Gardia-safe mode to avoid false positives.
+     */
+    public static final PacketParserMode PACKET_PARSER_MODE = PacketParserMode.GARDIA_SAFE;
+
+    /** Observed recurring Gardia frame marker for radar status notifications. */
+    public static final int GARDIA_FRAME_MARKER_STATUS = 0x30;
 }

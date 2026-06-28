@@ -24,6 +24,15 @@ class RadarPacketDecoderTest {
     }
 
     @Test
+    fun `observed Gardia status frame returns empty list`() {
+        // Observed from com.brytonsport.gardia while no vehicles are approaching.
+        val hex = "3000000000000000310000000000000000140300"
+        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val result = RadarPacketDecoder.decode(bytes)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
     fun `one vehicle decoded correctly`() {
         // count=1, id=1, distCode=32 (mid-range), speed=500 (= 5 m/s = 18 km/h)
         val bytes = byteArrayOf(

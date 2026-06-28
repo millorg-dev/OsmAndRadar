@@ -39,6 +39,32 @@ public final class RadarPacketDecoder {
      */
     @NonNull
     public static List<RadarVehicle> decode(@NonNull byte[] bytes) {
+        if (RadarConfig.PACKET_PARSER_MODE == RadarConfig.PacketParserMode.GARDIA_SAFE) {
+            return decodeGardiaSafe(bytes);
+        }
+        return decodeLegacyCountFirst(bytes);
+    }
+
+    @NonNull
+    private static List<RadarVehicle> decodeGardiaSafe(@NonNull byte[] bytes) {
+        if (bytes.length < 1) {
+            return Collections.emptyList();
+        }
+        int frameMarker = bytes[0] & 0xFF;
+
+        // Observed on-device with com.brytonsport.gardia while no traffic:
+        // 3000000000000000310000000000000000140300
+        // Treat this frame family as all-clear until full Gardia protocol is verified.
+        if (frameMarker == RadarConfig.GARDIA_FRAME_MARKER_STATUS) {
+            return Collections.emptyList();
+        }
+
+        // Fallback to the generic parser for non-status frames.
+        return decodeLegacyCountFirst(bytes);
+    }
+
+    @NonNull
+    private static List<RadarVehicle> decodeLegacyCountFirst(@NonNull byte[] bytes) {
         if (bytes.length < 1) {
             return Collections.emptyList();
         }
