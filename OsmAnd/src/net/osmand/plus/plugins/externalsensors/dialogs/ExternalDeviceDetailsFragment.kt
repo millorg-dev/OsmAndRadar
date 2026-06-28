@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.appcompat.content.res.AppCompatResources
@@ -13,6 +14,10 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import net.osmand.plus.R
 import net.osmand.plus.helpers.AndroidUiHelper
+import net.osmand.plus.plugins.PluginsHelper
+import net.osmand.plus.plugins.bikeradar.BikeRadarPlugin
+import net.osmand.plus.plugins.bikeradar.RadarConfig
+import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice
 import net.osmand.plus.plugins.bikeradar.devices.FakeBLEGardiaDevice
 import net.osmand.plus.plugins.externalsensors.adapters.ChangeableCharacteristicsAdapter
 import net.osmand.plus.plugins.externalsensors.adapters.DeviceCharacteristicsAdapter
@@ -38,6 +43,8 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 	companion object {
 		const val TAG: String = "ExternalSensorDetailsFragment"
 		const val DEVICE_ID_KEY = "DEVICE_ID"
+		private const val RADAR_THRESHOLD_MIN_KMH = 20
+		private const val RADAR_THRESHOLD_MAX_KMH = 70
 
 		fun showInstance(manager: FragmentManager, device: AbstractDevice<out AbstractSensor>) {
 			if (AndroidUtils.isFragmentCanBeAdded(manager, TAG)) {
@@ -71,6 +78,11 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 	private var radarScenarioContainer: View? = null
 	private var radarScenarioName: TextView? = null
 	private var radarScenarioNextButton: View? = null
+	private var radarThresholdContainer: View? = null
+	private var radarThresholdValue: TextView? = null
+	private var radarThresholdSlider: SeekBar? = null
+	private var bikeRadarPlugin: BikeRadarPlugin? = null
+	private var updatingRadarThresholdUi = false
 
 	override fun getLayoutId(): Int {
 		return R.layout.fragment_external_device_details
@@ -113,16 +125,34 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		radarScenarioContainer = view.findViewById(R.id.radar_scenario_container)
 		radarScenarioName = view.findViewById(R.id.radar_scenario_name)
 		radarScenarioNextButton = view.findViewById(R.id.radar_scenario_next_button)
+		radarThresholdContainer = view.findViewById(R.id.radar_threshold_container)
+		radarThresholdValue = view.findViewById(R.id.radar_threshold_value)
+		radarThresholdSlider = view.findViewById(R.id.radar_threshold_slider)
+		bikeRadarPlugin = PluginsHelper.getPlugin(BikeRadarPlugin::class.java)
 		forgetButton = view.findViewById(R.id.forget_device_container)
 		forgetButtonText = view.findViewById(R.id.forget_btn)
 		forgetButtonIcon = view.findViewById(R.id.forget_icon)
 		forgetButton?.setOnClickListener { onForgetDevice() }
 		deviceNamePropertyButton?.setOnClickListener { onRenameDevice() }
 		radarScenarioNextButton?.setOnClickListener { selectNextRadarScenario() }
+		radarThresholdSlider?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+			override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+				val value = sliderProgressToThreshold(progress)
+				updateRadarThresholdValueText(value)
+				if (fromUser && !updatingRadarThresholdUi) {
+					applyRadarThreshold(value)
+				}
+			}
+
+			override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+
+			override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+		})
 		updateConnectedState(view)
 		updateButtonState(view)
 		updateProperties()
 		updateRadarScenarioUi()
+		updateRadarThresholdUi()
 		val connectionTypeContentView: View = view.findViewById(R.id.connection_type_container)
 		val connectionTypeTextView: TextView = view.findViewById(R.id.connection_type)
 		var connectionType = getConnectionTypeName()
@@ -220,6 +250,50 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		if (fakeDevice != null) {
 			radarScenarioName?.text = fakeDevice.currentScenarioName
 		}
+	}
+
+	private fun updateRadarThresholdUi() {
+		val isRadarDevice = device is BLEGardiaDevice
+		val hasRadarPlugin = bikeRadarPlugin != null
+		AndroidUiHelper.updateVisibility(radarThresholdContainer, isRadarDevice && hasRadarPlugin)
+		if (!isRadarDevice || !hasRadarPlugin) {
+			return
+		}
+
+		val threshold = getCurrentRadarThreshold()
+		updatingRadarThresholdUi = true
+		radarThresholdSlider?.max = RADAR_THRESHOLD_MAX_KMH - RADAR_THRESHOLD_MIN_KMH
+		radarThresholdSlider?.progress = thresholdToSliderProgress(threshold)
+		updateRadarThresholdValueText(threshold)
+		updatingRadarThresholdUi = false
+	}
+
+	private fun updateRadarThresholdValueText(valueKmh: Int) {
+		radarThresholdValue?.text = getString(R.string.bike_radar_threshold_value_kmh, valueKmh)
+	}
+
+	private fun getCurrentRadarThreshold(): Int {
+		val pluginThreshold = bikeRadarPlugin?.HIGH_SPEED_THRESHOLD_KMH?.get()
+			?: RadarConfig.DEFAULT_HIGH_SPEED_THRESHOLD_KMH
+		return clampRadarThreshold(pluginThreshold.toInt())
+	}
+
+	private fun thresholdToSliderProgress(valueKmh: Int): Int {
+		return clampRadarThreshold(valueKmh) - RADAR_THRESHOLD_MIN_KMH
+	}
+
+	private fun sliderProgressToThreshold(progress: Int): Int {
+		return clampRadarThreshold(RADAR_THRESHOLD_MIN_KMH + progress)
+	}
+
+	private fun clampRadarThreshold(valueKmh: Int): Int {
+		return valueKmh.coerceIn(RADAR_THRESHOLD_MIN_KMH, RADAR_THRESHOLD_MAX_KMH)
+	}
+
+	private fun applyRadarThreshold(valueKmh: Int) {
+		val plugin = bikeRadarPlugin ?: return
+		plugin.HIGH_SPEED_THRESHOLD_KMH.set(valueKmh.toFloat())
+		this.plugin.applyRadarThresholdToKnownDevices()
 	}
 
 	private fun selectNextRadarScenario() {
@@ -335,6 +409,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		updateButtonState()
 		updateProperties()
 		updateRadarScenarioUi()
+		updateRadarThresholdUi()
 	}
 
 	override fun onPause() {
@@ -370,6 +445,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 			updateConnectedState()
 			updateButtonState()
 			updateRadarScenarioUi()
+			updateRadarThresholdUi()
 		}
 	}
 
@@ -378,6 +454,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 			updateConnectedState()
 			updateButtonState()
 			updateRadarScenarioUi()
+			updateRadarThresholdUi()
 		}
 	}
 
@@ -411,6 +488,10 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		radarScenarioContainer = null
 		radarScenarioName = null
 		radarScenarioNextButton = null
+		radarThresholdContainer = null
+		radarThresholdValue = null
+		radarThresholdSlider = null
+		bikeRadarPlugin = null
 	}
 
 	@ColorRes

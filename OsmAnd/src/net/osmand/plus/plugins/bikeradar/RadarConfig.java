@@ -63,6 +63,12 @@ public final class RadarConfig {
     // Alert thresholds
     // -----------------------------------------------------------------------
 
+    /** Minimum configurable high-speed threshold in km/h for UI controls. */
+    public static final float MIN_HIGH_SPEED_THRESHOLD_KMH = 20.0f;
+
+    /** Maximum configurable high-speed threshold in km/h for UI controls. */
+    public static final float MAX_HIGH_SPEED_THRESHOLD_KMH = 70.0f;
+
     /** Speed (km/h) above which the strip turns RED instead of orange. User-configurable. */
     public static final float DEFAULT_HIGH_SPEED_THRESHOLD_KMH = 50.0f;
 

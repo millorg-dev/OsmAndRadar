@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -211,8 +210,8 @@ public class RadarStripView extends View {
         canvas.drawRect(0, 0, width, height, backgroundPaint);
 
         // Vehicle icons
-        float iconWidth  = width * 0.7f;
-        float iconHeight = iconWidth * 1.6f;
+        float iconWidth  = width * 0.58f;
+        float iconHeight = iconWidth * 1.35f;
         float iconX = (width - iconWidth) / 2f;
 
         for (RadarVehicle vehicle : currentState.getVehicles()) {
@@ -223,40 +222,35 @@ public class RadarStripView extends View {
             }
             // Center icon vertically around yPos
             float top = yPos - iconHeight / 2f;
-            drawCarIcon(canvas, iconX, top, iconWidth, iconHeight);
+            drawVehicleArrow(canvas, iconX, top, iconWidth, iconHeight);
         }
     }
 
     /**
-     * Draws a simplified top-down car silhouette using Canvas primitives.
-     * No external bitmap dependencies.
+     * Draws a simple navigation-style arrow triangle.
+     * Tip points up (towards decreasing distance / rider position).
      */
-    private void drawCarIcon(@NonNull Canvas canvas, float x, float top,
-                             float w, float h) {
-        // Car body
-        RectF body = new RectF(x, top + h * 0.2f, x + w, top + h * 0.8f);
-        canvas.drawRoundRect(body, w * 0.15f, w * 0.15f, vehiclePaint);
+    private void drawVehicleArrow(@NonNull Canvas canvas, float x, float top,
+                                  float w, float h) {
+        float cx = x + w / 2f;
 
-        // Roof (narrower rectangle in the middle)
-        RectF roof = new RectF(x + w * 0.15f, top + h * 0.35f,
-                               x + w * 0.85f, top + h * 0.65f);
+        Path arrow = new Path();
+        arrow.moveTo(cx, top);
+        arrow.lineTo(x + w, top + h);
+        arrow.lineTo(x, top + h);
+        arrow.close();
+
+        canvas.drawPath(arrow, vehiclePaint);
+
+        // Subtle center notch keeps shape readable on strong strip colors.
         iconPaint.setColor(0x66000000);
-        canvas.drawRoundRect(roof, w * 0.1f, w * 0.1f, iconPaint);
+        Path notch = new Path();
+        notch.moveTo(cx, top + h * 0.32f);
+        notch.lineTo(cx + w * 0.12f, top + h * 0.72f);
+        notch.lineTo(cx - w * 0.12f, top + h * 0.72f);
+        notch.close();
+        canvas.drawPath(notch, iconPaint);
         iconPaint.setColor(Color.WHITE);
-
-        // Front wheels
-        float wheelW = w * 0.18f;
-        float wheelH = h * 0.12f;
-        canvas.drawOval(new RectF(x - wheelW * 0.3f, top + h * 0.22f,
-                                  x + wheelW * 0.7f, top + h * 0.22f + wheelH), vehiclePaint);
-        canvas.drawOval(new RectF(x + w - wheelW * 0.7f, top + h * 0.22f,
-                                  x + w + wheelW * 0.3f, top + h * 0.22f + wheelH), vehiclePaint);
-
-        // Rear wheels
-        canvas.drawOval(new RectF(x - wheelW * 0.3f, top + h * 0.66f,
-                                  x + wheelW * 0.7f, top + h * 0.66f + wheelH), vehiclePaint);
-        canvas.drawOval(new RectF(x + w - wheelW * 0.7f, top + h * 0.66f,
-                                  x + w + wheelW * 0.3f, top + h * 0.66f + wheelH), vehiclePaint);
     }
 
     // -----------------------------------------------------------------------

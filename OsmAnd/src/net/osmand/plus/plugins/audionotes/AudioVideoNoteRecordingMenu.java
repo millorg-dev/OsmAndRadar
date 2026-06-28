@@ -177,9 +177,9 @@ public class AudioVideoNoteRecordingMenu {
 		switch (recording.getType()) {
 			case REC_AUDIO:
 			case REC_VIDEO:
-				recIcon.setImageDrawable(iconsCache.getThemedIcon(R.drawable.ic_action_rec_stop));
-				recText.setText(view.getResources().getString(R.string.shared_string_control_stop));
-				recText.setVisibility(View.VISIBLE);
+				recIcon.setImageDrawable(iconsCache.getPaintedIcon(R.drawable.ic_action_rec_start,
+						requireMapActivity().getColor(R.color.map_widget_red)));
+				recText.setVisibility(View.GONE);
 				updateDuration();
 				timeView.setVisibility(View.VISIBLE);
 				break;

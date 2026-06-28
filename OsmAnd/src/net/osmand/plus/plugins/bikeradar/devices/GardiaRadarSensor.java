@@ -77,7 +77,9 @@ public class GardiaRadarSensor extends BLEAbstractSensor {
 
     /** Update the high-speed threshold (km/h). Call from plugin settings. */
     public void setHighSpeedThresholdKmh(float thresholdKmh) {
-        this.highSpeedThresholdKmh = thresholdKmh;
+        this.highSpeedThresholdKmh = Math.max(
+                RadarConfig.MIN_HIGH_SPEED_THRESHOLD_KMH,
+                Math.min(thresholdKmh, RadarConfig.MAX_HIGH_SPEED_THRESHOLD_KMH));
     }
 
     @NonNull

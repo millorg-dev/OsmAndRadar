@@ -37,6 +37,8 @@ import net.osmand.plus.chooseplan.OsmAndFeature;
 import net.osmand.plus.plugins.OsmandPlugin;
 import net.osmand.plus.plugins.PluginsHelper;
 import net.osmand.plus.plugins.bikeradar.BikeRadarPlugin;
+import net.osmand.plus.plugins.bikeradar.RadarConfig;
+import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice;
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.AbstractSensor;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.DeviceChangeableProperty;
@@ -409,6 +411,7 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 		if (!isDevicePaired(device)) {
 			devicesHelper.setDevicePaired(device, true);
 		}
+		applyRadarThresholdIfNeeded(device);
 	}
 
 	public void unpairDevice(@NonNull AbstractDevice<?> device) {
@@ -425,6 +428,7 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 		if (isDevicePaired(device)) {
 			devicesHelper.setDeviceEnabled(device, true);
 		}
+		applyRadarThresholdIfNeeded(device);
 		devicesHelper.connectDevice(activity, device);
 	}
 
@@ -484,7 +488,26 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 			if (bikeRadarPlugin != null) {
 				PluginsHelper.enablePluginIfNeeded(null, app, bikeRadarPlugin, true);
 			}
+			applyRadarThresholdIfNeeded(device);
 		}
+	}
+
+	public void applyRadarThresholdToKnownDevices() {
+		for (AbstractDevice<?> device : getDevices()) {
+			applyRadarThresholdIfNeeded(device);
+		}
+	}
+
+	private void applyRadarThresholdIfNeeded(@NonNull AbstractDevice<?> device) {
+		if (!(device instanceof BLEGardiaDevice)) {
+			return;
+		}
+		BikeRadarPlugin bikeRadarPlugin = PluginsHelper.getPlugin(BikeRadarPlugin.class);
+		float thresholdKmh = RadarConfig.DEFAULT_HIGH_SPEED_THRESHOLD_KMH;
+		if (bikeRadarPlugin != null) {
+			thresholdKmh = bikeRadarPlugin.HIGH_SPEED_THRESHOLD_KMH.get();
+		}
+		((BLEGardiaDevice) device).getRadarSensor().setHighSpeedThresholdKmh(thresholdKmh);
 	}
 
 	@NonNull

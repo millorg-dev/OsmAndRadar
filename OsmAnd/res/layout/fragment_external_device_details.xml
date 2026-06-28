@@ -144,6 +144,74 @@
 				</LinearLayout>
 
 				<LinearLayout
+					android:id="@+id/radar_threshold_container"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="@dimen/content_padding_small"
+					android:layout_marginBottom="@dimen/content_padding_small"
+					android:background="?attr/list_background_color"
+					android:elevation="2dp"
+					android:orientation="vertical"
+					android:visibility="gone">
+
+					<net.osmand.plus.widgets.TextViewEx
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="center_vertical"
+						android:padding="@dimen/content_padding"
+						android:text="@string/bike_radar_high_speed_threshold"
+						android:textSize="@dimen/default_list_text_size"
+						app:typefaceWeight="medium" />
+
+					<TextView
+						android:id="@+id/radar_threshold_value"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:paddingStart="@dimen/content_padding"
+						android:paddingTop="@dimen/content_padding_small"
+						android:paddingEnd="@dimen/content_padding"
+						android:paddingBottom="@dimen/content_padding_half"
+						android:textColor="?android:textColorSecondary"
+						android:textSize="@dimen/default_list_text_size"
+						tools:text="50 km/h" />
+
+					<SeekBar
+						android:id="@+id/radar_threshold_slider"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginStart="@dimen/content_padding"
+						android:layout_marginEnd="@dimen/content_padding"
+						android:max="50" />
+
+					<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="horizontal"
+						android:paddingStart="@dimen/content_padding"
+						android:paddingTop="@dimen/content_padding_half"
+						android:paddingEnd="@dimen/content_padding"
+						android:paddingBottom="@dimen/content_padding">
+
+						<TextView
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							android:text="@string/bike_radar_threshold_min_kmh"
+							android:textColor="?android:textColorSecondary"
+							android:textSize="@dimen/default_desc_text_size" />
+
+						<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="@string/bike_radar_threshold_max_kmh"
+							android:textColor="?android:textColorSecondary"
+							android:textSize="@dimen/default_desc_text_size" />
+
+					</LinearLayout>
+
+				</LinearLayout>
+
+				<LinearLayout
 					android:id="@+id/radar_scenario_container"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"

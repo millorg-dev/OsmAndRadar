@@ -20,6 +20,9 @@
     <string name="bike_radar_scenario_single_car">Single approaching car</string>
     <string name="bike_radar_scenario_two_cars">Two approaching cars</string>
     <string name="bike_radar_scenario_fast_car">Fast approaching car</string>
+    <string name="bike_radar_threshold_value_kmh">%1$d km/h</string>
+    <string name="bike_radar_threshold_min_kmh">20 km/h</string>
+    <string name="bike_radar_threshold_max_kmh">70 km/h</string>
     <!-- Bike Radar Plugin -->
 	<string name="bike_radar_device_name">Rear Radar</string>
 	<string name="bike_radar_plugin_name">Bike Radar</string>
