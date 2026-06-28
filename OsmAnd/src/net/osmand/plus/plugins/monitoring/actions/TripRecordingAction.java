@@ -25,7 +25,7 @@ public class TripRecordingAction extends BaseMonitoringAction {
 	public static final QuickActionType TYPE = new QuickActionType(TRIP_RECORDING_ACTION,
 			"trip.recording.startpause", TripRecordingAction.class)
 			.nameRes(R.string.shared_string_trip_recording)
-			.iconRes(R.drawable.ic_action_trip_rec_start)
+			.iconRes(R.drawable.ic_action_rec_start)
 			.nonEditable()
 			.category(QuickActionType.MY_PLACES)
 			.nameActionRes(R.string.quick_action_verb_start_pause);
@@ -53,8 +53,8 @@ public class TripRecordingAction extends BaseMonitoringAction {
 	@Override
 	public int getIconRes(Context context) {
 		return isRecordingTrack()
-				? R.drawable.ic_action_trip_rec_pause
-				: R.drawable.ic_action_trip_rec_start;
+				? R.drawable.ic_pause
+				: R.drawable.ic_action_rec_start;
 	}
 
 	@Override
