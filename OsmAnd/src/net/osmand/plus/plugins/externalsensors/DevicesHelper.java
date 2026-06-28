@@ -34,6 +34,7 @@ import net.osmand.plus.R;
 import net.osmand.plus.Version;
 import net.osmand.plus.activities.ActivityResultListener;
 import net.osmand.plus.activities.MapActivity;
+import net.osmand.plus.plugins.bikeradar.RadarConfig;
 import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DevicePreferencesListener;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DeviceSettings;
@@ -69,6 +70,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -157,6 +159,19 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 		for (String deviceId : devicesSettingsCollection.getDeviceIds()) {
 			DeviceSettings deviceSettings = devicesSettingsCollection.getDeviceSettings(deviceId);
 			if (deviceSettings != null && !devices.containsKey(deviceId)) {
+				if (shouldMigrateCadenceToRadar(deviceSettings)) {
+					AbstractDevice<?> radarDevice = bluetoothAdapter != null ? new BLEGardiaDevice(bluetoothAdapter, deviceId) : null;
+					if (radarDevice != null) {
+						DeviceSettings migratedSettings = DevicesSettingsCollection.createDeviceSettings(
+								deviceId, radarDevice, deviceSettings.getDeviceEnabled());
+						String savedName = deviceSettings.getParams().get(NAME);
+						if (!Algorithms.isEmpty(savedName)) {
+							migratedSettings.setDeviceProperty(NAME, savedName);
+						}
+						devicesSettingsCollection.setDeviceSettings(deviceId, migratedSettings);
+						deviceSettings = migratedSettings;
+					}
+				}
 				if (deviceSettings.getDeviceType() == null) {
 					devicesSettingsCollection.removeDeviceSettings(deviceId);
 				} else {
@@ -254,6 +269,19 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 				deviceName = settings == null ? result.getDevice().getName() : settings.getParams().get(NAME);
 				List<ParcelUuid> uuids = scanRecord.getServiceUuids();
 				if (uuids != null) {
+					// Prioritize radar if advertised together with CSC to avoid Gardia being misdetected as cadence.
+					if (containsUuid(uuids, BLEGardiaDevice.getServiceUUID()) || isRadarDeviceName(deviceName)) {
+						BLEAbstractDevice radarDevice = BLEAbstractDevice.createDeviceByUUID(
+								bluetoothAdapter,
+								BLEGardiaDevice.getServiceUUID(),
+								address,
+								deviceName,
+								result.getRssi());
+						if (radarDevice != null && !devices.containsKey(radarDevice.getDeviceId())) {
+							addFoundBLEDevice(radarDevice);
+						}
+						return;
+					}
 					for (ParcelUuid uuid : uuids) {
 						BLEAbstractDevice device = createBLEDevice(result, uuid, address, deviceName);
 						if (device != null) {
@@ -277,6 +305,31 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 			LOG.error("BLE scan failed. Error " + errorCode);
 		}
 	};
+
+	private static boolean containsUuid(@NonNull List<ParcelUuid> uuids, @NonNull UUID uuidToFind) {
+		for (ParcelUuid uuid : uuids) {
+			if (uuidToFind.equals(uuid.getUuid())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isRadarDeviceName(@Nullable String deviceName) {
+		if (Algorithms.isEmpty(deviceName)) {
+			return false;
+		}
+		String normalizedName = deviceName.toLowerCase(Locale.US);
+		return normalizedName.startsWith(RadarConfig.DEVICE_NAME_PREFIX_GARDIA.toLowerCase(Locale.US))
+				|| normalizedName.startsWith(RadarConfig.DEVICE_NAME_PREFIX_VARIA.toLowerCase(Locale.US));
+	}
+
+	private static boolean shouldMigrateCadenceToRadar(@NonNull DeviceSettings deviceSettings) {
+		if (deviceSettings.getDeviceType() != DeviceType.BLE_BICYCLE_SCD) {
+			return false;
+		}
+		return isRadarDeviceName(deviceSettings.getParams().get(NAME));
+	}
 
 	@Nullable
 	protected BLEAbstractDevice createBLEDevice(ScanResult result, ParcelUuid uuid, String address, String deviceName) {
