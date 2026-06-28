@@ -21,7 +21,7 @@ public enum DeviceType {
 	BLE_BLOOD_PRESSURE(R.string.external_device_blood_pressure, R.drawable.ic_action_sensor_heart_rate_outlined, R.drawable.widget_sensor_heart_rate_day, R.drawable.widget_sensor_heart_rate_night),
 	BLE_BICYCLE_SCD(R.string.bicycle_scd_device_name, R.drawable.ic_action_sensor_cadence_outlined, R.drawable.widget_sensor_cadence_day, R.drawable.widget_sensor_cadence_night),
 	BLE_RUNNING_SCDS(R.string.running_scds_device_name, R.drawable.ic_action_sensor_cadence_outlined, R.drawable.widget_sensor_cadence_day, R.drawable.widget_sensor_cadence_night),
-	BLE_RADAR_GARDIA(R.string.bike_radar_device_name, R.drawable.ic_action_sensor_heart_rate_outlined, R.drawable.widget_sensor_heart_rate_day, R.drawable.widget_sensor_heart_rate_night);
+	BLE_RADAR_GARDIA(R.string.bike_radar_device_name, R.drawable.ic_action_sensor_speed_outlined, R.drawable.widget_sensor_speed_day, R.drawable.widget_sensor_speed_night);
 
 	@StringRes
 	public final int titleId;

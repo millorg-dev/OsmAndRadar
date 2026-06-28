@@ -97,7 +97,7 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     @Override
     public int getLogoResourceId() {
-        return R.drawable.ic_action_sensor_heart_rate_outlined;
+        return R.drawable.ic_action_sensor_speed_outlined;
     }
 
     @Override
@@ -108,6 +108,7 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     @Override
     public void mapActivityResume(@NonNull MapActivity activity) {
+        addRadarStripView(activity);
         registerRadarListener();
     }
 

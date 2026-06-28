@@ -35,6 +35,8 @@ import net.osmand.plus.charts.GPXDataSetType;
 import net.osmand.plus.charts.OrderedLineDataSet;
 import net.osmand.plus.chooseplan.OsmAndFeature;
 import net.osmand.plus.plugins.OsmandPlugin;
+import net.osmand.plus.plugins.PluginsHelper;
+import net.osmand.plus.plugins.bikeradar.BikeRadarPlugin;
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.AbstractSensor;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.DeviceChangeableProperty;
@@ -464,6 +466,12 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 						}
 					}
 				}
+			}
+		}
+		if (device.getDeviceType() == DeviceType.BLE_RADAR_GARDIA) {
+			BikeRadarPlugin bikeRadarPlugin = PluginsHelper.getPlugin(BikeRadarPlugin.class);
+			if (bikeRadarPlugin != null) {
+				PluginsHelper.enablePluginIfNeeded(getMapActivity(), app, bikeRadarPlugin, true);
 			}
 		}
 	}
