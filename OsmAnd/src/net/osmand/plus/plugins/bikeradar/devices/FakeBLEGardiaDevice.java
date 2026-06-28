@@ -27,7 +27,7 @@ import java.util.List;
 public class FakeBLEGardiaDevice extends BLEGardiaDevice {
 
     private static final long CONNECT_DELAY_MS = 250L;
-    private static final long FRAME_PERIOD_MS = 1200L;
+    private static final long FRAME_PERIOD_MS = 300L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<ReplayScenario> replayScenarios;
@@ -147,16 +147,29 @@ public class FakeBLEGardiaDevice extends BLEGardiaDevice {
                 frames(
                         "3000000000000000310000000000000000140300",
                         "0100010801F4",
+                "0100010C01F4",
+                "0100011001F4",
+                "0100011401F4",
                         "0100011801F4",
+                "0100011C01F4",
+                "0100012001F4",
+                "0100012401F4",
                         "0100012801F4",
+                "0100012C01F4",
+                "0100013001F4",
                         "0100013401F4",
+                "0100013801F4",
                         "3000000000000000310000000000000000140300"
                 )));
         scenarios.add(new ReplayScenario(
                 app.getString(R.string.bike_radar_scenario_two_cars),
                 frames(
                         "0200013001F402000F14012C",
+                "0200013214B402001118012C",
+                "0200013415780200131C01C2",
+                "02000136153C0200152001F4",
                         "0200013815E00200182001F4",
+                "0200013A15E002001C1801C2",
                         "0200013C15E002002810012C",
                         "01000210012C",
                         "3000000000000000310000000000000000140300"
@@ -166,8 +179,13 @@ public class FakeBLEGardiaDevice extends BLEGardiaDevice {
                 frames(
                         "3000000000000000310000000000000000140300",
                         "0100012007D0",
+                "0100012407D0",
+                "0100012807D0",
+                "0100012C07D0",
                         "0100013007D0",
+                "0100013407D0",
                         "0100013807D0",
+                "0100013C07D0",
                         "3000000000000000310000000000000000140300"
                 )));
         return scenarios;

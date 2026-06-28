@@ -11,7 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,7 +49,9 @@ public class RadarStripView extends View {
     static final int COLOR_HIGH_SPEED  = 0xFFF44336; // Red 500
     static final int COLOR_BACKGROUND  = 0x88000000; // semi-transparent black overlay
 
-    private static final int ANIMATION_DURATION_MS = 300;
+    private static final int MIN_ANIMATION_DURATION_MS = 120;
+    private static final int MAX_ANIMATION_DURATION_MS = 360;
+    private static final float MIN_MOVE_TO_ANIMATE_PX = 1.5f;
 
     // -----------------------------------------------------------------------
     // Paint objects
@@ -165,12 +167,28 @@ public class RadarStripView extends View {
 
         ValueAnimator existing = vehicleAnimators.get(vehicleId);
         if (existing != null) {
+            Object current = existing.getAnimatedValue();
+            if (current instanceof Float) {
+                startY = (Float) current;
+            }
             existing.cancel();
         }
 
+        float delta = Math.abs(targetY - startY);
+        if (delta < MIN_MOVE_TO_ANIMATE_PX) {
+            vehicleYPositions.put(vehicleId, targetY);
+            invalidate();
+            return;
+        }
+
+        float viewHeight = Math.max(1f, getHeight());
+        float normalizedDelta = Math.min(delta / viewHeight, 1f);
+        int durationMs = (int) (MIN_ANIMATION_DURATION_MS
+                + (MAX_ANIMATION_DURATION_MS - MIN_ANIMATION_DURATION_MS) * normalizedDelta);
+
         ValueAnimator animator = ValueAnimator.ofFloat(startY, targetY);
-        animator.setDuration(ANIMATION_DURATION_MS);
-        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.setDuration(durationMs);
+        animator.setInterpolator(new LinearInterpolator());
         animator.addUpdateListener(animation -> {
             vehicleYPositions.put(vehicleId, (Float) animation.getAnimatedValue());
             invalidate();
