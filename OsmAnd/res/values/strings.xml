@@ -11,7 +11,16 @@
 	Strings for OsmAnd core
 	Thx - Hardy
 -->
-	<!-- Bike Radar Plugin -->
+    <string name="bike_radar_simulated_device_name">Simulated Gardia</string>
+    <string name="bike_radar_pair_simulated_device">Simulated rear radar</string>
+    <string name="bike_radar_simulated_scenarios">Simulated scenarios</string>
+    <string name="bike_radar_simulated_scenarios_hint">Switch scenarios here. The fake device will replay frames through the same radar pipeline as a real Gardia.</string>
+    <string name="bike_radar_next_scenario">Next scenario</string>
+    <string name="bike_radar_scenario_clear">Clear road</string>
+    <string name="bike_radar_scenario_single_car">Single approaching car</string>
+    <string name="bike_radar_scenario_two_cars">Two approaching cars</string>
+    <string name="bike_radar_scenario_fast_car">Fast approaching car</string>
+    <!-- Bike Radar Plugin -->
 	<string name="bike_radar_device_name">Rear Radar</string>
 	<string name="bike_radar_plugin_name">Bike Radar</string>
 	<string name="bike_radar_plugin_description">Rear radar display for cycling. Supports Bryton Gardia and Garmin Varia via BLE.</string>

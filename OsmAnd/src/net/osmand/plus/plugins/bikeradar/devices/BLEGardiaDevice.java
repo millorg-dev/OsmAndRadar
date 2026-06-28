@@ -18,9 +18,17 @@ import java.util.UUID;
  */
 public class BLEGardiaDevice extends BLEAbstractDevice {
 
+    protected final GardiaRadarSensor radarSensor;
+
     public BLEGardiaDevice(@NonNull BluetoothAdapter bluetoothAdapter, @NonNull String deviceId) {
         super(bluetoothAdapter, deviceId);
-        sensors.add(new GardiaRadarSensor(this));
+        radarSensor = new GardiaRadarSensor(this);
+        sensors.add(radarSensor);
+    }
+
+    @NonNull
+    public GardiaRadarSensor getRadarSensor() {
+        return radarSensor;
     }
 
     @NonNull

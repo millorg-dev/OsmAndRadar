@@ -57,6 +57,7 @@ public final class RadarConfig {
     /** Device name prefix used as fallback when service UUID is not advertised. */
     public static final String DEVICE_NAME_PREFIX_GARDIA = "Gardia";
     public static final String DEVICE_NAME_PREFIX_VARIA = "Varia";
+    public static final String DEBUG_FAKE_DEVICE_ID = "debug.fake.gardia";
 
     // -----------------------------------------------------------------------
     // Alert thresholds

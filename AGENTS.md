@@ -112,7 +112,9 @@ Many resources (icons, fonts, voice files) are not in the main `res` folder but 
 - **Updating Plugins:** Most plugin-specific code is in `net.osmand.plus.plugins`.
 
 ## 9. Restrictions
-- **Building Gradle project:** YOU MUST NEVER run Gradle buid task by yourself! EVEN for verifying build errors!!!
+- **Building Gradle project:** Local Gradle tasks are allowed when needed for validation, debugging, or when explicitly requested by the user.
+- Prefer the narrowest useful task such as a module-scoped assemble, test, lint, or typecheck task.
+- Avoid broad release-style builds unless the user asks for them.
 
 ---
 *Note: This file is a living document and should be updated as the project evolves.*

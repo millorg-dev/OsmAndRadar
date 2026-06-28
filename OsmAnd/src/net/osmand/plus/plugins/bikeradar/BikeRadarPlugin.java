@@ -8,6 +8,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.osmand.plus.BuildConfig;
 import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
@@ -40,6 +41,9 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     /** High-speed alert threshold in km/h. Vehicles above this speed turn the strip red. */
     public final CommonPreference<Float> HIGH_SPEED_THRESHOLD_KMH;
+
+    /** Debug-only on-device packet trace for ride diagnostics without laptop. */
+    public final CommonPreference<Boolean> DEBUG_TRACE_ENABLED;
 
     // -----------------------------------------------------------------------
     // UI
@@ -74,6 +78,9 @@ public class BikeRadarPlugin extends OsmandPlugin {
         HIGH_SPEED_THRESHOLD_KMH = settings.registerFloatPreference(
                 "bike_radar_high_speed_threshold_kmh",
                 RadarConfig.DEFAULT_HIGH_SPEED_THRESHOLD_KMH).makeProfile();
+        DEBUG_TRACE_ENABLED = settings.registerBooleanPreference(
+            "bike_radar_debug_trace_enabled",
+            BuildConfig.DEBUG).makeGlobal();
     }
 
     // -----------------------------------------------------------------------
@@ -102,12 +109,14 @@ public class BikeRadarPlugin extends OsmandPlugin {
 
     @Override
     public void mapActivityCreate(@NonNull MapActivity activity) {
+        RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         addRadarStripView(activity);
         registerRadarListener();
     }
 
     @Override
     public void mapActivityResume(@NonNull MapActivity activity) {
+        RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         addRadarStripView(activity);
         registerRadarListener();
     }
@@ -131,12 +140,11 @@ public class BikeRadarPlugin extends OsmandPlugin {
         if (radarStripView != null) {
             return; // already added
         }
-        // Find the FrameLayout that wraps the map – it contains map_view_with_layers
-        View mapWithLayers = activity.findViewById(R.id.map_view_with_layers);
-        if (mapWithLayers == null || !(mapWithLayers.getParent() instanceof FrameLayout)) {
+        View stripHostView = activity.findViewById(R.id.radar_strip_host);
+        if (!(stripHostView instanceof FrameLayout)) {
             return; // layout not ready
         }
-        FrameLayout mapContainer = (FrameLayout) mapWithLayers.getParent();
+        FrameLayout stripHost = (FrameLayout) stripHostView;
 
         float density = activity.getResources().getDisplayMetrics().density;
         int stripWidthPx = Math.round(STRIP_WIDTH_DP * density);
@@ -149,12 +157,13 @@ public class BikeRadarPlugin extends OsmandPlugin {
                 ViewGroup.LayoutParams.MATCH_PARENT);
         params.gravity = Gravity.START | Gravity.TOP;
 
-        mapContainer.addView(radarStripView, params);
+        stripHost.addView(radarStripView, params);
     }
 
     private void registerRadarListener() {
-        float threshold = HIGH_SPEED_THRESHOLD_KMH.get();
+        RadarDebugTrace.configure(app, DEBUG_TRACE_ENABLED.get());
         radarStateListener = state -> {
+            RadarDebugTrace.onState(state);
             RadarStripView view = radarStripView;
             if (view != null) {
                 view.updateState(state);

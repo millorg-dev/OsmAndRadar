@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
+import net.osmand.plus.BuildConfig;
 import net.osmand.plus.R;
 import net.osmand.plus.base.MenuBottomSheetDialogFragment;
 import net.osmand.plus.base.bottomsheetmenu.BaseBottomSheetItem;
@@ -13,6 +14,9 @@ import net.osmand.plus.base.bottomsheetmenu.BottomSheetItemWithDescription;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.DividerItem;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.DividerSpaceItem;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.TitleItem;
+import net.osmand.plus.plugins.PluginsHelper;
+import net.osmand.plus.plugins.externalsensors.ExternalSensorsPlugin;
+import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
 import net.osmand.plus.utils.AndroidUtils;
 import net.osmand.plus.widgets.dialogbutton.DialogButtonType;
 
@@ -50,6 +54,24 @@ public class PairNewDeviceBottomSheet extends MenuBottomSheetDialogFragment {
 				})
 				.create();
 		items.add(pairAntItem);
+
+		if (BuildConfig.DEBUG) {
+			BaseBottomSheetItem pairSimulatedRadar = new BottomSheetItemWithDescription.Builder()
+					.setIcon(getContentIcon(R.drawable.ic_action_sensor_speed_outlined))
+					.setTitle(getString(R.string.bike_radar_pair_simulated_device))
+					.setLayoutId(R.layout.bottom_sheet_item_simple_pad_32dp)
+					.setOnClickListener(v -> {
+						dismiss();
+						ExternalSensorsPlugin plugin = PluginsHelper.getPlugin(ExternalSensorsPlugin.class);
+						AbstractDevice<?> device = plugin != null ? plugin.createFakeRadarDevice() : null;
+						if (device != null) {
+							callMapActivity(mapActivity ->
+									ExternalDeviceDetailsFragment.showInstance(mapActivity.getSupportFragmentManager(), device));
+						}
+					})
+					.create();
+			items.add(pairSimulatedRadar);
+		}
 
 		items.add(new DividerItem(getContext()));
 

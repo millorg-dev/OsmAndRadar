@@ -1,6 +1,8 @@
 package net.osmand.test.junit.radar
 
 import net.osmand.plus.plugins.bikeradar.RadarConfig
+import net.osmand.plus.plugins.bikeradar.RadarAlertCalculator
+import net.osmand.plus.plugins.bikeradar.RadarAlertLevel
 import net.osmand.plus.plugins.bikeradar.devices.RadarPacketDecoder
 import org.junit.Assert.*
 import org.junit.Test
@@ -30,6 +32,30 @@ class RadarPacketDecoderTest {
         val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
         val result = RadarPacketDecoder.decode(bytes)
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `decodeHex supports spaced replay payload`() {
+        val result = RadarPacketDecoder.decodeHex("01 00 01 20 01 F4")
+        assertEquals(1, result.size)
+        assertEquals(1, result[0].id)
+    }
+
+    @Test
+    fun `replay sequence emulates clear approaching high speed`() {
+        val thresholdKmh = 50f
+
+        // Frame 1: observed Gardia status/all-clear packet
+        val clearVehicles = RadarPacketDecoder.decodeHex("3000000000000000310000000000000000140300")
+        assertEquals(RadarAlertLevel.CLEAR, RadarAlertCalculator.calculate(clearVehicles, thresholdKmh))
+
+        // Frame 2: one moderate-speed target (~18 km/h)
+        val approachingVehicles = RadarPacketDecoder.decodeHex("0100012001F4")
+        assertEquals(RadarAlertLevel.APPROACHING, RadarAlertCalculator.calculate(approachingVehicles, thresholdKmh))
+
+        // Frame 3: one high-speed target (~72 km/h)
+        val highSpeedVehicles = RadarPacketDecoder.decodeHex("0100021007D0")
+        assertEquals(RadarAlertLevel.HIGH_SPEED, RadarAlertCalculator.calculate(highSpeedVehicles, thresholdKmh))
     }
 
     @Test

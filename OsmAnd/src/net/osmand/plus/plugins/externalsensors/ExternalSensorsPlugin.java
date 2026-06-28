@@ -221,6 +221,14 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 		return devicesHelper.getAnyDevice(deviceId);
 	}
 
+	@Nullable
+	public AbstractDevice<?> createFakeRadarDevice() {
+		if (devicesHelper instanceof ExternalSensorsDeviceHelper helper) {
+			return helper.createFakeRadarDevice();
+		}
+		return null;
+	}
+
 	@Override
 	protected void attachAdditionalInfoToRecordedTrack(@NonNull Location location, @NonNull JSONObject json) {
 		for (ExternalSensorTrackDataType externalSensorTrackDataType : ExternalSensorTrackDataType.values()) {
@@ -367,6 +375,9 @@ public class ExternalSensorsPlugin extends OsmandPlugin {
 	}
 
 	public void searchBLEDevices() {
+		if (devicesHelper instanceof ExternalSensorsDeviceHelper helper) {
+			helper.createFakeRadarDevice();
+		}
 		devicesHelper.scanBLEDevices(true);
 		new Handler(Looper.myLooper()).postDelayed(this::finishBLEDevicesSearch, DEVICES_SEARCH_TIMEOUT);
 	}

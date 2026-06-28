@@ -16,35 +16,52 @@
 			android:layout_height="0dp"
 			android:layout_weight="1">
 
-			<net.osmand.plus.views.MapViewWithLayers
-				android:id="@+id/map_view_with_layers"
+			<LinearLayout
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:orientation="vertical" />
+				android:orientation="horizontal">
 
-			<include layout="@layout/map_hud_layout" />
+				<FrameLayout
+					android:id="@+id/radar_strip_host"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent" />
 
-			<FrameLayout
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:layout_gravity="bottom">
+				<FrameLayout
+					android:layout_width="0dp"
+					android:layout_height="match_parent"
+					android:layout_weight="1">
 
-				<View
-					android:layout_width="match_parent"
-					android:layout_height="1px" />
+					<net.osmand.plus.views.MapViewWithLayers
+						android:id="@+id/map_view_with_layers"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:orientation="vertical" />
 
-			</FrameLayout>
+					<include layout="@layout/map_hud_layout" />
 
-			<View
-				android:layout_width="match_parent"
-				android:layout_height="match_parent" />
+					<FrameLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_gravity="bottom">
 
-			<androidx.appcompat.widget.AppCompatImageView
-				android:id="@+id/bottomShadow"
-				android:layout_width="match_parent"
-				android:layout_height="10dp"
-				android:layout_gravity="bottom"
-				android:background="@drawable/bg_contextmenu_shadow_top_light" />
+						<View
+							android:layout_width="match_parent"
+							android:layout_height="1px" />
+
+					</FrameLayout>
+
+					<View
+						android:layout_width="match_parent"
+						android:layout_height="match_parent" />
+
+					<androidx.appcompat.widget.AppCompatImageView
+						android:id="@+id/bottomShadow"
+						android:layout_width="match_parent"
+						android:layout_height="10dp"
+						android:layout_gravity="bottom"
+						android:background="@drawable/bg_contextmenu_shadow_top_light" />
+				</FrameLayout>
+			</LinearLayout>
 
 		</FrameLayout>
 

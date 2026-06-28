@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import net.osmand.plus.R
 import net.osmand.plus.helpers.AndroidUiHelper
+import net.osmand.plus.plugins.bikeradar.devices.FakeBLEGardiaDevice
 import net.osmand.plus.plugins.externalsensors.adapters.ChangeableCharacteristicsAdapter
 import net.osmand.plus.plugins.externalsensors.adapters.DeviceCharacteristicsAdapter
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice
@@ -67,6 +68,9 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 	private var forgetButton: View? = null
 	private var forgetButtonText: TextView? = null
 	private var forgetButtonIcon: ImageView? = null
+	private var radarScenarioContainer: View? = null
+	private var radarScenarioName: TextView? = null
+	private var radarScenarioNextButton: View? = null
 
 	override fun getLayoutId(): Int {
 		return R.layout.fragment_external_device_details
@@ -106,14 +110,19 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		batteryLevelContentView = view.findViewById(R.id.battery_level_container)
 		deviceNameProperty = view.findViewById(R.id.property_name)
 		deviceNamePropertyButton = view.findViewById(R.id.name_property_container)
+		radarScenarioContainer = view.findViewById(R.id.radar_scenario_container)
+		radarScenarioName = view.findViewById(R.id.radar_scenario_name)
+		radarScenarioNextButton = view.findViewById(R.id.radar_scenario_next_button)
 		forgetButton = view.findViewById(R.id.forget_device_container)
 		forgetButtonText = view.findViewById(R.id.forget_btn)
 		forgetButtonIcon = view.findViewById(R.id.forget_icon)
 		forgetButton?.setOnClickListener { onForgetDevice() }
 		deviceNamePropertyButton?.setOnClickListener { onRenameDevice() }
+		radarScenarioNextButton?.setOnClickListener { selectNextRadarScenario() }
 		updateConnectedState(view)
 		updateButtonState(view)
 		updateProperties()
+		updateRadarScenarioUi()
 		val connectionTypeContentView: View = view.findViewById(R.id.connection_type_container)
 		val connectionTypeTextView: TextView = view.findViewById(R.id.connection_type)
 		var connectionType = getConnectionTypeName()
@@ -203,6 +212,20 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		deviceNameProperty?.text = deviceName
 		deviceNameHeader?.text = deviceName
 		changeableCharacteristicsAdapter?.notifyDataSetChanged()
+	}
+
+	private fun updateRadarScenarioUi() {
+		val fakeDevice = device as? FakeBLEGardiaDevice
+		AndroidUiHelper.updateVisibility(radarScenarioContainer, fakeDevice != null)
+		if (fakeDevice != null) {
+			radarScenarioName?.text = fakeDevice.currentScenarioName
+		}
+	}
+
+	private fun selectNextRadarScenario() {
+		val fakeDevice = device as? FakeBLEGardiaDevice ?: return
+		fakeDevice.selectNextScenario()
+		updateRadarScenarioUi()
 	}
 
 	private fun updateButtonState(view: View) {
@@ -311,6 +334,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		updateConnectedState()
 		updateButtonState()
 		updateProperties()
+		updateRadarScenarioUi()
 	}
 
 	override fun onPause() {
@@ -345,6 +369,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		app.runInUIThread {
 			updateConnectedState()
 			updateButtonState()
+			updateRadarScenarioUi()
 		}
 	}
 
@@ -352,6 +377,7 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		app.runInUIThread {
 			updateConnectedState()
 			updateButtonState()
+			updateRadarScenarioUi()
 		}
 	}
 
@@ -382,6 +408,9 @@ class ExternalDeviceDetailsFragment : ExternalDevicesBaseFragment(), DeviceListe
 		batteryLevel = null
 		receivedDataView = null
 		changeablePropertiesView = null
+		radarScenarioContainer = null
+		radarScenarioName = null
+		radarScenarioNextButton = null
 	}
 
 	@ColorRes

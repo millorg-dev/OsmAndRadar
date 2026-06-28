@@ -9,6 +9,7 @@ import net.osmand.plus.plugins.bikeradar.RadarVehicle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Decodes raw BLE notification bytes from a radar sensor into a list of RadarVehicles.
@@ -43,6 +44,34 @@ public final class RadarPacketDecoder {
             return decodeGardiaSafe(bytes);
         }
         return decodeLegacyCountFirst(bytes);
+    }
+
+    /**
+     * Utility for replay/emulation tests: decode a hex payload string directly.
+     * Non-hex characters are ignored, so strings with spaces are supported.
+     */
+    @NonNull
+    public static List<RadarVehicle> decodeHex(@NonNull String hexPayload) {
+        byte[] bytes = fromHex(hexPayload);
+        if (bytes.length == 0) {
+            return Collections.emptyList();
+        }
+        return decode(bytes);
+    }
+
+    /**
+     * Converts bytes to uppercase hexadecimal for debug traces.
+     */
+    @NonNull
+    public static String toHex(@NonNull byte[] bytes) {
+        if (bytes.length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format(Locale.US, "%02X", b));
+        }
+        return sb.toString();
     }
 
     @NonNull
@@ -122,5 +151,26 @@ public final class RadarPacketDecoder {
 
     private static int readUint16Be(byte[] bytes, int offset) {
         return ((bytes[offset] & 0xFF) << 8) | (bytes[offset + 1] & 0xFF);
+    }
+
+    @NonNull
+    private static byte[] fromHex(@NonNull String hexPayload) {
+        StringBuilder cleaned = new StringBuilder(hexPayload.length());
+        for (int i = 0; i < hexPayload.length(); i++) {
+            char c = hexPayload.charAt(i);
+            if (Character.digit(c, 16) >= 0) {
+                cleaned.append(c);
+            }
+        }
+        if (cleaned.length() == 0 || (cleaned.length() % 2) != 0) {
+            return new byte[0];
+        }
+        byte[] out = new byte[cleaned.length() / 2];
+        for (int i = 0; i < cleaned.length(); i += 2) {
+            int hi = Character.digit(cleaned.charAt(i), 16);
+            int lo = Character.digit(cleaned.charAt(i + 1), 16);
+            out[i / 2] = (byte) ((hi << 4) + lo);
+        }
+        return out;
     }
 }

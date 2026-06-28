@@ -36,6 +36,7 @@ import net.osmand.plus.activities.ActivityResultListener;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.plugins.bikeradar.RadarConfig;
 import net.osmand.plus.plugins.bikeradar.devices.BLEGardiaDevice;
+import net.osmand.plus.plugins.bikeradar.devices.FakeBLEGardiaDevice;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DevicePreferencesListener;
 import net.osmand.plus.plugins.externalsensors.DevicesSettingsCollection.DeviceSettings;
 import net.osmand.plus.plugins.externalsensors.devices.AbstractDevice;
@@ -217,9 +218,21 @@ public abstract class DevicesHelper implements DeviceListener, DevicePreferences
 			case BLE_RUNNING_SCDS ->
 					bluetoothAdapter != null ? new BLERunningSCDDevice(bluetoothAdapter, deviceId) : null;
 			case BLE_RADAR_GARDIA ->
-					bluetoothAdapter != null ? new BLEGardiaDevice(bluetoothAdapter, deviceId) : null;
+					createRadarDevice(deviceId);
 			default -> null;
 		};
+	}
+
+	@Nullable
+	private AbstractDevice<?> createRadarDevice(@NonNull String deviceId) {
+		BluetoothAdapter adapter = bluetoothAdapter != null ? bluetoothAdapter : BluetoothAdapter.getDefaultAdapter();
+		if (adapter == null) {
+			return null;
+		}
+		if (RadarConfig.DEBUG_FAKE_DEVICE_ID.equals(deviceId)) {
+			return new FakeBLEGardiaDevice(app, adapter, deviceId);
+		}
+		return new BLEGardiaDevice(adapter, deviceId);
 	}
 
 	public boolean isAntScanning() {

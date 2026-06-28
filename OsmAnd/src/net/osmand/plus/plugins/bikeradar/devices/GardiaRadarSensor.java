@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import net.osmand.plus.plugins.bikeradar.BikeRadarPlugin;
 import net.osmand.plus.plugins.bikeradar.RadarAlertCalculator;
 import net.osmand.plus.plugins.bikeradar.RadarConfig;
+import net.osmand.plus.plugins.bikeradar.RadarDebugTrace;
 import net.osmand.plus.plugins.bikeradar.RadarState;
 import net.osmand.plus.plugins.bikeradar.RadarVehicle;
 import net.osmand.plus.plugins.externalsensors.devices.sensors.AbstractSensor;
@@ -131,10 +132,15 @@ public class GardiaRadarSensor extends BLEAbstractSensor {
         if (bytes == null) {
             return;
         }
+        handleRadarPayload(bytes);
+    }
+
+    public void handleRadarPayload(@NonNull byte[] bytes) {
         List<RadarVehicle> vehicles = RadarPacketDecoder.decode(bytes);
         RadarState newState = RadarAlertCalculator.buildState(vehicles, highSpeedThresholdKmh);
         lastState = newState;
         lastTimeDifferentValue = System.currentTimeMillis();
+        RadarDebugTrace.onPacket(bytes, vehicles, newState);
 
         // Notify the plugin via static listener (avoids circular dependency)
         BikeRadarPlugin.RadarStateListener listener = BikeRadarPlugin.getRadarStateListener();
