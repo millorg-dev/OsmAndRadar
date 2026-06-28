@@ -47,10 +47,23 @@ class RadarAlertCalculatorTest {
     }
 
     @Test
-    fun `one fast vehicle among slow ones returns HIGH_SPEED`() {
-        val vehicles = listOf(vehicle(speed = 20.0f), vehicle(id = 2, speed = 75.0f))
+    fun `closest fast vehicle among slow ones returns HIGH_SPEED`() {
+        val vehicles = listOf(
+            vehicle(id = 1, dist = 20.0f, speed = 75.0f),
+            vehicle(id = 2, dist = 60.0f, speed = 20.0f)
+        )
         val level = RadarAlertCalculator.calculate(vehicles, threshold)
         assertEquals(RadarAlertLevel.HIGH_SPEED, level)
+    }
+
+    @Test
+    fun `far fast vehicle with close slow vehicle returns APPROACHING`() {
+        val vehicles = listOf(
+            vehicle(id = 1, dist = 20.0f, speed = 25.0f),
+            vehicle(id = 2, dist = 70.0f, speed = 70.0f)
+        )
+        val level = RadarAlertCalculator.calculate(vehicles, threshold)
+        assertEquals(RadarAlertLevel.APPROACHING, level)
     }
 
     @Test

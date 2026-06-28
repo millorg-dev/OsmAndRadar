@@ -20,8 +20,8 @@ public final class RadarAlertCalculator {
      *
      * Rules (in priority order):
      *  1. No vehicles → CLEAR
-     *  2. Any vehicle with relativeSpeedKmh >= thresholdKmh → HIGH_SPEED
-     *  3. Otherwise → APPROACHING
+     *  2. Closest vehicle with relativeSpeedKmh >= thresholdKmh → HIGH_SPEED
+     *  3. Otherwise (at least one vehicle) → APPROACHING
      *
      * @param vehicles       detected vehicles (may be empty)
      * @param thresholdKmh   speed limit in km/h above which HIGH_SPEED is triggered
@@ -32,12 +32,12 @@ public final class RadarAlertCalculator {
         if (vehicles.isEmpty()) {
             return RadarAlertLevel.CLEAR;
         }
-        for (RadarVehicle v : vehicles) {
-            if (v.getRelativeSpeedKmh() >= thresholdKmh) {
-                return RadarAlertLevel.HIGH_SPEED;
-            }
-        }
-        return RadarAlertLevel.APPROACHING;
+
+        RadarVehicle closest = Collections.min(vehicles,
+                Comparator.comparingDouble(RadarVehicle::getDistanceMeters));
+        return closest.getRelativeSpeedKmh() >= thresholdKmh
+                ? RadarAlertLevel.HIGH_SPEED
+                : RadarAlertLevel.APPROACHING;
     }
 
     /**
